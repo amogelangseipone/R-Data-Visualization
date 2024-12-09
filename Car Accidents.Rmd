@@ -1,0 +1,129 @@
+---
+title: "R_Car_Accidents"
+author: "Amogelang Alicia Seipone"
+date: "2024-11-19"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction  
+
+As part of my project, I decided to explore the concept of car insurance pricing using data analysis. Specifically, I wanted to look at how different factors, like age, gender, and accident history, affect the risk of getting into an accident and how these factors can influence the cost of car insurance premiums. 
+
+The goal was to create a synthetic dataset that mimics real-world data, perform some basic analysis on it, and simulate the pricing of car insurance based on risk scores.
+
+## Data Generation  
+
+To get started, I generated synthetic data that includes:
+- **Age**: Ranging from 18 to 80 years, to simulate a variety of age groups.
+- **Gender**: A random assignment of male or female.
+- **Accident History**: A count of past accidents, ranging from 0 to 5.
+I used a random number generator to create these values, meaning the data doesn't represent real individuals but gives us a feel for how these factors might influence risk.
+
+```{r}
+# Load Required Libraries
+library(ggplot2) # For visualization
+library(dplyr)   # For data manipulation
+
+# Generate Synthetic Data
+set.seed(123) # For reproducibility
+n <- 1000 # Number of samples
+
+synthetic_data <- data.frame(
+  ID = 1:n,
+  Age = sample(18:80, n, replace = TRUE),
+  Gender = sample(c("Male", "Female"), n, replace = TRUE),
+  Accident_History = sample(0:5, n, replace = TRUE)
+)
+```
+## Risk Scoring
+The main part of the analysis involves calculating a Risk Score for each individual based on certain assumptions:
+
+**Age:**
+Under 25 years old: Higher risk score (80).
+25 to 60 years old: Medium risk score (50).
+Over 60 years old: Slightly higher risk score (70).
+**Gender:**
+Females were assigned a risk score of 20, and males a risk score of 10. (This is a simple assumption and can be adjusted based on data or other factors.)
+**Accident History:** Each past accident adds 15 to the risk score.
+
+
+```{r}
+# Calculate Risk Scores
+synthetic_data <- synthetic_data %>%
+  mutate(
+    Risk_Score = case_when(
+      Age < 25 ~ 80,
+      Age >= 25 & Age <= 60 ~ 50,
+      Age > 60 ~ 70,
+      TRUE ~ 0
+    ) + case_when(
+      Gender == "Female" ~ 20,
+      Gender == "Male" ~ 10,
+      TRUE ~ 0
+    ) + Accident_History * 15
+  )
+
+```
+This risk scoring method is a simplified version of how insurance companies might assess risk, though real insurance models are much more complex.
+
+## Simulating Premiums
+Once I had the risk scores, I calculated the insurance premium for each individual:
+
+The premium is determined by multiplying the risk score by 5 and adding a base amount of 100.
+
+```{r}
+# Simulate Premiums
+synthetic_data <- synthetic_data %>%
+  mutate(Premium = Risk_Score * 5 + 100)
+
+```
+This gives us an idea of how premiums might vary based on risk. For example, a person with a higher risk score (due to being younger or having more accidents) would have a higher premium.
+
+## Data Visualization
+To visualize the data, I created two plots:
+
+**Risk Score by Age:** A scatter plot that shows how risk scores vary across different age groups. As expected, younger individuals (under 25) generally have higher risk scores, while older individuals (over 60) also show a slight increase.
+
+**Premium Distribution:** A histogram that shows how premiums are distributed across the dataset. Most individuals have a premium around the middle of the range, with fewer people at the extremes (very low or very high premiums).
+
+```{r}
+# Visualize Risk Score by Age
+ggplot(synthetic_data, aes(x = Age, y = Risk_Score)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Risk Score by Age", x = "Age", y = "Risk Score")
+
+# Visualize Premium Distribution
+ggplot(synthetic_data, aes(x = Premium)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  labs(title = "Premium Distribution", x = "Premium", y = "Frequency")
+
+```
+
+## Results
+
+**The data shows clear patterns:**
+
+Younger people (especially under 25) tend to have higher risk scores and, therefore, higher premiums.
+People with more accidents in their history also see a rise in premiums.
+The gender difference in the risk score is minimal but is included here to show how you could incorporate different factors into the model.
+
+```{r}
+# Export Results
+write.csv(synthetic_data, "synthetic_insurance_data.csv", row.names = FALSE)
+
+# Save plots as images
+ggsave("risk_score_by_age.png", width = 8, height = 5)
+ggsave("premium_distribution.png", width = 8, height = 5)
+
+```
+
+
+
